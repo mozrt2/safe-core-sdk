@@ -288,7 +288,13 @@ class SafeApiKit {
     const { address: delegator } = await this.#ethAdapter.getEip3770Address(delegatorAddress)
     const totp = Math.floor(Date.now() / 1000 / 3600)
     const data = delegate + totp
-    const signature = await signer.signMessage(data)
+    let signature = await signer.signMessage(data)
+    const MIN_VALID_V_VALUE = 27
+    let sigV = parseInt(signature.slice(-2), 16);
+    if (sigV < MIN_VALID_V_VALUE) {
+        sigV += MIN_VALID_V_VALUE
+    }
+    signature = signature.slice(0, -2) + sigV.toString(16)
     const body: any = {
       safe: safeAddress ? (await this.#ethAdapter.getEip3770Address(safeAddress)).address : null,
       delegate,
